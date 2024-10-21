@@ -10,6 +10,7 @@ import { AddNewModel, ConfigureProvider } from "./pages/AddNewModel";
 import ErrorPage from "./pages/error";
 import GUI from "./pages/gui";
 import History from "./pages/history";
+import SemanticSearch from "./pages/semanticSearch";
 import MigrationPage from "./pages/migration";
 import MonacoPage from "./pages/monaco";
 import MorePage from "./pages/More";
@@ -35,6 +36,10 @@ const router = createMemoryRouter([
       {
         path: "/history",
         element: <History />,
+      },
+      {
+        path: "/semanticSearch",
+        element: <SemanticSearch />,
       },
       {
         path: "/stats",

@@ -228,6 +228,13 @@
         "group": "Continue"
       },
       {
+        "command": "continue.semanticSearch",
+        "category": "Continue",
+        "title": "Semantic Search",
+        "icon": "$(search)",
+        "group": "Continue"
+      },
+      {
         "command": "continue.writeCommentsForCode",
         "category": "Continue",
         "title": "Write Comments for this Code",
@@ -451,6 +458,11 @@
         {
           "command": "continue.toggleFullScreen",
           "group": "navigation@3",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.semanticSearch",
+          "group": "navigation@1",
           "when": "view == continue.continueGUIView"
         }
       ],
