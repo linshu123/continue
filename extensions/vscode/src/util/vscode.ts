@@ -83,6 +83,7 @@ export function openEditorAndRevealRange(
         editorFilename.slice(1),
       );
     }
+    // get the root path of the workspace
     vscode.workspace.openTextDocument(filename).then(async (doc) => {
       try {
         // An error is thrown mysteriously if you open two documents in parallel, hence this

@@ -126,6 +126,19 @@ const Layout = () => {
   );
 
   useWebviewListener(
+    "semanticSearch",
+    async () => {
+      // Toggle the history page / main page
+      if (location.pathname === "/semanticSearch") {
+        navigate("/");
+      } else {
+        navigate("/semanticSearch");
+      }
+    },
+    [location, navigate],
+  );
+
+  useWebviewListener(
     "navigateTo",
     async (data) => {
       if (data.toggle && location.pathname === data.path) {

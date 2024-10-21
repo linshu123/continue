@@ -483,6 +483,9 @@ const commandsMap: (
     "continue.applyCodeFromChat": () => {
       sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
+    "continue.semanticSearch": () => {
+      sidebar.webviewProtocol?.request("semanticSearch", undefined);
+    },
     "continue.toggleFullScreen": () => {
       focusGUI();
 
@@ -632,8 +635,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
