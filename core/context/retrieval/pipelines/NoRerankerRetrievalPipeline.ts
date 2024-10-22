@@ -34,8 +34,8 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
     );
 
     retrievalResults.push(
-      ...recentlyEditedFilesChunks,
-      ...ftsChunks,
+      // ...recentlyEditedFilesChunks,
+      // ...ftsChunks,
       ...embeddingsChunks,
       ...repoMapChunks,
     );

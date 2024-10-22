@@ -24,8 +24,8 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     );
 
     retrievalResults.push(
-      ...recentlyEditedFilesChunks,
-      ...ftsChunks,
+      // ...recentlyEditedFilesChunks,
+      // ...ftsChunks,
       ...embeddingsChunks,
       ...repoMapChunks,
     );
