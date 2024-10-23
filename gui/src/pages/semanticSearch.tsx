@@ -192,7 +192,7 @@ function SemanticSearch() {
                         openContextItem(contextItem);
                       }}
                     >
-                      {contextItem.name}
+                      {contextItem.name} {contextItem.id.providerTitle}
                     </a>
                   </code>
                   <StyledMarkdownPreview
