@@ -434,7 +434,7 @@ export class LanceDbIndex implements CodebaseIndex {
     n: number,
     tags: BranchAndDir[],
     filterDirectory: string | undefined,
-  ): Promise<{ chunks: Chunk; score: number }[]> {
+  ): Promise<Chunk[]> {
     const [vector] = await this.embeddingsProvider.embed([query]);
     const db = await lance.connect(getLanceDbPath());
 
