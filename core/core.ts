@@ -669,10 +669,12 @@ export class Core {
       return rows;
     });
     on("index/forceReIndex", async ({ data }) => {
-      // if (data?.shouldClearIndexes) {
       const codebaseIndexer = await this.codebaseIndexerPromise;
-      await codebaseIndexer.clearIndexes();
-      // }
+      if (data?.shouldClearIndexes) {
+        await codebaseIndexer.clearIndexes();
+      }
+      codebaseIndexer.printDbPath();
+
 
       const dirs = data?.dir ? [data.dir] : await this.ide.getWorkspaceDirs();
       await this.refreshCodebaseIndex(dirs);

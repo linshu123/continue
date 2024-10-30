@@ -71,6 +71,13 @@ export class CodebaseIndexer {
     }
   }
 
+  printDbPath() {
+    const sqliteFilepath = getIndexSqlitePath();
+    const lanceDbFolder = getLanceDbPath();
+    console.log("sqliteFilepath: ", sqliteFilepath);
+    console.log("lanceDbFolder: ", lanceDbFolder);
+  }
+
   protected async getIndexesToBuild(): Promise<CodebaseIndex[]> {
     const config = await this.configHandler.loadConfig();
     const pathSep = await this.ide.pathSep();
