@@ -10,24 +10,24 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     let retrievalResults: Chunk[] = [];
 
-    const ftsChunks = await this.retrieveFts(input, nRetrieve);
-    const embeddingsChunks = await this.retrieveEmbeddings(input, nRetrieve);
-    const recentlyEditedFilesChunks =
-      await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+    // const ftsChunks = await this.retrieveFts(input, nRetrieve);
+    const embeddingsChunks = await this.retrieveEmbeddings(input, 200);
+    // const recentlyEditedFilesChunks =
+    await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
 
-    const repoMapChunks = await requestFilesFromRepoMap(
-      this.options.llm,
-      this.options.config,
-      this.options.ide,
-      input,
-      filterDirectory,
-    );
+    // const repoMapChunks = await requestFilesFromRepoMap(
+    //   this.options.llm,
+    //   this.options.config,
+    //   this.options.ide,
+    //   input,
+    //   filterDirectory,
+    // );
 
     retrievalResults.push(
       // ...recentlyEditedFilesChunks,
       // ...ftsChunks,
       ...embeddingsChunks,
-      ...repoMapChunks,
+      // ...repoMapChunks,
     );
 
     if (filterDirectory) {

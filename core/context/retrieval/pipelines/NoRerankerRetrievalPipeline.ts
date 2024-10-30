@@ -37,7 +37,7 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
       // ...recentlyEditedFilesChunks,
       // ...ftsChunks,
       ...embeddingsChunks,
-      ...repoMapChunks,
+      // ...repoMapChunks,
     );
 
     if (filterDirectory) {

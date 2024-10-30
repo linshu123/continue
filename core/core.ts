@@ -483,7 +483,7 @@ export class Core {
     on("tts/kill", async () => {
       void TTS.kill();
     });
-    
+
     on("chatDescriber/describe", async (msg) => {
       const currentModel = await this.getSelectedModel();
       return await ChatDescriber.describe(currentModel, {}, msg.data);
@@ -669,10 +669,10 @@ export class Core {
       return rows;
     });
     on("index/forceReIndex", async ({ data }) => {
-      if (data?.shouldClearIndexes) {
-        const codebaseIndexer = await this.codebaseIndexerPromise;
-        await codebaseIndexer.clearIndexes();
-      }
+      // if (data?.shouldClearIndexes) {
+      const codebaseIndexer = await this.codebaseIndexerPromise;
+      await codebaseIndexer.clearIndexes();
+      // }
 
       const dirs = data?.dir ? [data.dir] : await this.ide.getWorkspaceDirs();
       await this.refreshCodebaseIndex(dirs);

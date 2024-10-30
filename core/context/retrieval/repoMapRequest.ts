@@ -36,6 +36,7 @@ export async function requestFilesFromRepoMap(
   input: string,
   filterDirectory?: string,
 ): Promise<Chunk[]> {
+  return [];
   const llm = getModelByRole(config, "repoMapFileSelection") ?? defaultLlm;
 
   // Only supported for Claude models right now

@@ -17,8 +17,7 @@ import { useNavigationListener } from "../hooks/useNavigationListener";
 import { getFontSize } from "../util";
 import ContextItemsPeek from "../components/mainInput/ContextItemsPeek";
 import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
-import { getMarkdownLanguageTagForFile } from "core/util";
-// import { contextItemToRangeInFileWithContents } from "core/commands/util";
+
 const SearchBarContainer = styled.div`
   display: flex;
   max-width: 500px;
@@ -64,38 +63,47 @@ function SemanticSearch() {
 
   const ideMessenger = useContext(IdeMessengerContext);
 
+  const [searchDuration, setSearchDuration] = useState<number | null>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+
   const getFence = (contextItem: ContextItemWithId) => {
     const backticks = contextItem.content.match(backticksRegex);
     return backticks ? backticks.sort().at(-1) + "`" : "```";
   };
 
   const fetchContextItems = async (query: string) => {
-    console.log("fetchContextItems", query);
-    const data = {
-      name: "codebase",
-      query: "",
-      fullInput: query,
-      selectedCode: [],
-    };
-    const result = await ideMessenger.request("context/getContextItems", data);
-    if (result.status === "success") {
-      const resolvedItems = result.content;
-      // remove the last element
-      resolvedItems.pop();
-      setContextItems(resolvedItems);
-      return resolvedItems;
-    }
-    return [];
-  };
+    if (isLoading) return;
 
-  // const openContextItem = (contextItem: ContextItemWithId) => {
-  //   const rif = contextItemToRangeInFileWithContents(contextItem);
-  //   ideMessenger.ide.showLines(
-  //     rif.filepath,
-  //     rif.range.start.line,
-  //     rif.range.end.line,
-  //   );
-  // };
+    setIsLoading(true);
+    console.log("fetchContextItems", query);
+    const startTime = performance.now();
+
+    try {
+      const data = {
+        name: "codebase",
+        query: "",
+        fullInput: query,
+        selectedCode: [],
+      };
+      const result = await ideMessenger.request(
+        "context/getContextItems",
+        data,
+      );
+      const endTime = performance.now();
+      setSearchDuration((endTime - startTime) / 1000);
+
+      if (result.status === "success") {
+        const resolvedItems = result.content;
+        resolvedItems.pop();
+        setContextItems(resolvedItems);
+        return resolvedItems;
+      }
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const lowerCaseMiniSearchTerm = miniSearchTerm.toLowerCase();
@@ -112,6 +120,12 @@ function SemanticSearch() {
   useEffect(() => {
     setHeaderHeight(stickyHistoryHeaderRef.current?.clientHeight || 100);
   }, [stickyHistoryHeaderRef.current]);
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchTerm !== "") {
+      fetchContextItems(searchTerm);
+    }
+  };
 
   return (
     <div className="overflow-y-scroll" style={{ fontSize: getFontSize() }}>
@@ -155,23 +169,38 @@ function SemanticSearch() {
             placeholder="Search codebase"
             type="text"
             onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleKeyPress}
           />
           <span
-            className="mx-1 my-2 block w-12 cursor-pointer select-none rounded-md px-2 py-1.5 text-center"
+            className={`mx-1 my-2 block w-12 cursor-${isLoading ? "not-allowed" : "pointer"} select-none rounded-md px-2 py-1.5 text-center`}
             style={{
               fontSize: "11px",
               backgroundColor:
-                searchTerm !== "" ? vscInputBackground : vscBadgeBackground,
+                searchTerm !== "" && !isLoading
+                  ? vscInputBackground
+                  : vscBadgeBackground,
+              opacity: isLoading ? 0.5 : 1,
             }}
             onClick={() => {
-              fetchContextItems(searchTerm);
+              if (!isLoading && searchTerm !== "") {
+                fetchContextItems(searchTerm);
+              }
             }}
           >
-            ⏎
+            {isLoading ? "..." : "⏎"}
           </span>
         </SearchBarContainer>
 
-        <ContextItemsPeek contextItems={filteredAndSortedContextItems} />
+        <ContextItemsPeek
+          contextItems={filteredAndSortedContextItems}
+          isGatheringContext={isLoading}
+        />
+
+        {searchDuration !== null && (
+          <div className="text-center text-sm text-gray-500">
+            Search completed in {searchDuration.toFixed(2)} seconds
+          </div>
+        )}
 
         {filteredAndSortedContextItems.length === 0 && (
           <div className="m-4 text-center">
@@ -189,7 +218,6 @@ function SemanticSearch() {
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
-                        openContextItem(contextItem);
                       }}
                     >
                       {contextItem.name} {contextItem.id.providerTitle}
