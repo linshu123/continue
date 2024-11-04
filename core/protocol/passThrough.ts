@@ -22,6 +22,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/deleteModel",
     "config/reload",
     "context/getContextItems",
+    "context/getQuickReferences",
     "context/loadSubmenuItems",
     "context/addDocs",
     "context/removeDocs",

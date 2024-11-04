@@ -4,7 +4,9 @@
     "prettier-plugin-tailwindcss": "^0.6.8"
   },
   "dependencies": {
+    "@types/string-similarity": "^4.0.2",
     "esbuild": "^0.17.19",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "string-similarity": "^4.0.4"
   }
 }

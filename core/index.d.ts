@@ -35,6 +35,7 @@ export interface Chunk extends ChunkWithoutID {
   digest: string;
   filepath: string;
   index: number; // Index of the chunk in the document at filepath
+  distance?: number;
 }
 
 export interface IndexingProgressUpdate {
@@ -233,6 +234,12 @@ export interface Range {
   start: Position;
   end: Position;
 }
+
+export interface OneLineRange {
+  start: number;
+  end: number;
+}
+
 export interface Position {
   line: number;
   character: number;
@@ -287,6 +294,9 @@ export interface ContextItem {
   editable?: boolean;
   icon?: string;
   uri?: ContextItemUri;
+  similarity?: number;
+  distance?: number;
+  highlightRanges?: OneLineRange[];
 }
 
 export interface ContextItemWithId extends ContextItem {

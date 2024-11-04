@@ -15,23 +15,23 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     let retrievalResults: Chunk[] = [];
 
-    const ftsChunks = await this.retrieveFts(input, ftsNFinal);
+    // const ftsChunks = await this.retrieveFts(input, ftsNFinal);
 
     const embeddingsChunks = await this.retrieveEmbeddings(
       input,
       embeddingsNFinal,
     );
 
-    const recentlyEditedFilesChunks =
-      await this.retrieveAndChunkRecentlyEditedFiles(recentlyEditedNFinal);
+    // const recentlyEditedFilesChunks =
+    //   await this.retrieveAndChunkRecentlyEditedFiles(recentlyEditedNFinal);
 
-    const repoMapChunks = await requestFilesFromRepoMap(
-      this.options.llm,
-      this.options.config,
-      this.options.ide,
-      input,
-      filterDirectory,
-    );
+    // const repoMapChunks = await requestFilesFromRepoMap(
+    //   this.options.llm,
+    //   this.options.config,
+    //   this.options.ide,
+    //   input,
+    //   filterDirectory,
+    // );
 
     retrievalResults.push(
       // ...recentlyEditedFilesChunks,

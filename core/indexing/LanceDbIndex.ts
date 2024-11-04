@@ -423,6 +423,7 @@ export class LanceDbIndex implements CodebaseIndex {
       // seems like lancedb is only post-filtering, so have to return a bunch of results and slice after
       query = query.where(`path LIKE '${directory}%'`).limit(300);
     } else {
+      // query = query.limit(n).metricType(lance.MetricType.Cosine);
       query = query.limit(n);
     }
     const results = await query.execute();
@@ -455,6 +456,12 @@ export class LanceDbIndex implements CodebaseIndex {
       .slice(0, n);
 
     const sqliteDb = await SqliteDb.get();
+
+    // Create a map of uuid to distance scores
+    const distanceMap = new Map(
+      allResults.map(r => [r.uuid, r._distance])
+    );
+
     const data = await sqliteDb.all(
       `SELECT * FROM lance_db_cache WHERE uuid in (${allResults
         .map((r) => `'${r.uuid}'`)
@@ -469,6 +476,7 @@ export class LanceDbIndex implements CodebaseIndex {
         endLine: d.endLine,
         index: 0,
         content: d.contents,
+        distance: distanceMap.get(d.uuid), // Add the similarity score
       };
     });
   }

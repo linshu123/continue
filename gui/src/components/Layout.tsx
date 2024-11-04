@@ -108,6 +108,18 @@ const Layout = () => {
     [navigate],
   );
 
+  // useWebviewListener(
+  //   "showTopReferences",
+  //   async (data: { contextItems: any[] }) => {
+  //     navigate("/quickReferencePage", {
+  //       state: {
+  //         contextItems: data.contextItems,
+  //       },
+  //     });
+  //   },
+  //   [navigate]
+  // );
+
   useWebviewListener("openSettings", async () => {
     ideMessenger.post("openConfigJson", undefined);
   });
@@ -133,6 +145,19 @@ const Layout = () => {
         navigate("/");
       } else {
         navigate("/semanticSearch");
+      }
+    },
+    [location, navigate],
+  );
+
+  useWebviewListener(
+    "quickReferencePage",
+    async () => {
+      // Toggle the history page / main page
+      if (location.pathname === "/quickReferencePage") {
+        navigate("/");
+      } else {
+        navigate("/quickReferencePage");
       }
     },
     [location, navigate],

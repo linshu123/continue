@@ -13,7 +13,8 @@
       "args": [
         // Pass a directory to manually test in
         // "${workspaceFolder}/../test_repos/continue",
-        "${workspaceFolder}/../webapps/TravelPlayground",
+        "${workspaceFolder}/../test_repos/continue_test_2",
+        // "${workspaceFolder}/../webapps/TravelPlayground",
         // "${workspaceFolder}/manual-testing-sandbox",
         // "${workspaceFolder}/manual-testing-sandbox/test.js",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"

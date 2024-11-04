@@ -13,7 +13,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     // const ftsChunks = await this.retrieveFts(input, nRetrieve);
     const embeddingsChunks = await this.retrieveEmbeddings(input, 200);
     // const recentlyEditedFilesChunks =
-    await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+    // await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
 
     // const repoMapChunks = await requestFilesFromRepoMap(
     //   this.options.llm,

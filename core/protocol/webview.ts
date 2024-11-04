@@ -16,4 +16,10 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     void,
   ];
   setTTSActive: [boolean, void];
+  showTopReferences: [
+    {
+      contextItems: ContextItemWithId[];
+    },
+    void
+  ];
 };

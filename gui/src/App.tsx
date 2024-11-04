@@ -11,6 +11,7 @@ import ErrorPage from "./pages/error";
 import GUI from "./pages/gui";
 import History from "./pages/history";
 import SemanticSearch from "./pages/semanticSearch";
+import QuickReferencePage from "./pages/quickReferencePage";
 import MigrationPage from "./pages/migration";
 import MonacoPage from "./pages/monaco";
 import MorePage from "./pages/More";
@@ -40,6 +41,10 @@ const router = createMemoryRouter([
       {
         path: "/semanticSearch",
         element: <SemanticSearch />,
+      },
+      {
+        path: "/quickReferencePage",
+        element: <QuickReferencePage />,
       },
       {
         path: "/stats",

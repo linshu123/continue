@@ -1,4 +1,4 @@
-import { IContextProvider } from "core";
+import { ContextItemId, ContextItemWithId, IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
@@ -31,7 +31,8 @@ import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeIde } from "../VsCodeIde";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
-
+import { FilePredictor } from "../quickReference/filePredictor";
+import * as path from "path";
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
 
@@ -47,6 +48,7 @@ export class VsCodeExtension {
   private core: Core;
   private battery: Battery;
   private workOsAuthProvider: WorkOsAuthProvider;
+  private filePredictor: FilePredictor;
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
@@ -64,6 +66,7 @@ export class VsCodeExtension {
     this.ide = new VsCodeIde(this.diffManager, this.webviewProtocolPromise);
     this.extensionContext = context;
     this.windowId = uuidv4();
+   
 
     // Dependencies of core
     let resolveVerticalDiffManager: any = undefined;
@@ -149,6 +152,12 @@ export class VsCodeExtension {
 
       this.verticalDiffManager.refreshCodeLens =
         verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
+
+      this.filePredictor = new FilePredictor(
+        this.ide,
+        config.embeddingsProvider,
+        path.sep,
+      );
     });
 
     this.configHandler.onConfigUpdate(
@@ -352,6 +361,43 @@ export class VsCodeExtension {
         });
       }
     });
+
+    // Track file changes
+    vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+      if (editor) {
+        // this.filePredictor.addRecentFile(editor.document.uri.fsPath);
+        // await this.suggestRelevantFiles(editor.document.getText(), editor.document.uri.fsPath);
+        this.core.invoke("didChangeContentOnScreen", { content: editor.document.getText() });
+      }
+    });
+
+    // Track selection changes
+    vscode.window.onDidChangeTextEditorSelection(async (event) => {
+      const editor = event.textEditor;
+      if (editor && !editor.selection.isEmpty) {
+        const currentContent = editor.document.getText(editor.selection);
+        this.core.invoke("didChangeContentOnScreen", { content: currentContent });
+        // if (currentContent.trim().length > 0) {
+        //   await this.suggestRelevantFiles(currentContent, editor.document.uri.fsPath);
+        // }
+      }
+    });
+
+    // Track viewport changes
+    vscode.window.onDidChangeTextEditorVisibleRanges(async (event) => {
+      const editor = event.textEditor;
+      if (editor && editor.selection.isEmpty) {
+        const visibleRanges = editor.visibleRanges;
+        const visibleContent = visibleRanges.map(range => 
+          editor.document.getText(range)
+        ).join('\n');
+        this.core.invoke("didChangeContentOnScreen", { content: visibleContent });
+
+        // if (visibleContent.trim().length > 0) {
+        //   await this.suggestRelevantFiles(visibleContent, editor.document.uri.fsPath);
+        // }
+      }
+    });
   }
 
   static continueVirtualDocumentScheme = EXTENSION_NAME;
@@ -361,5 +407,31 @@ export class VsCodeExtension {
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.configHandler.registerCustomContextProvider(contextProvider);
+  }
+
+  async suggestRelevantFiles(content: string, filepath: string) {
+    const contextItems: ContextItemWithId[] = await this.filePredictor.predictRelevantSnippets(content, filepath);
+    
+    const webviewProtocol = await this.webviewProtocolPromise;
+
+    webviewProtocol.request("showTopReferences", {
+      contextItems,
+    }); 
+
+    // Show quick pick with relevant files
+    // const selected = await vscode.window.showQuickPick(
+    //   relevantFiles.map(file => ({
+    //     label: path.basename(file),
+    //     description: file,
+    //     file
+    //   }))
+    // );
+
+    // if (selected) {
+    //   await vscode.commands.executeCommand(
+    //     'vscode.open',
+    //     vscode.Uri.file(selected.file)
+    //   );
+    // }
   }
 }

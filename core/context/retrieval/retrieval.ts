@@ -96,33 +96,26 @@ export async function retrieveContextItemsFromEmbeddings(
     );
   }
 
-  return [
-    {
-      ...INSTRUCTIONS_BASE_ITEM,
-      content:
-        "Use the above code to answer the following question. You should not reference any files outside of what is shown, unless they are commonly known files, like a .gitignore or package.json. Reference the filenames whenever possible. If there isn't enough information to answer the question, suggest where the user might look to learn more.",
-    },
-    ...results
-      .sort((a, b) => a.filepath.localeCompare(b.filepath))
-      .map((r) => {
-        const name = `${path.basename(r.filepath)} (${r.startLine}-${
-          r.endLine
-        })`;
-        const description = `${r.filepath}`;
+  return results
+    .sort((a, b) => a.filepath.localeCompare(b.filepath))
+    .map((r) => {
+      const name = `${path.basename(r.filepath)} (${r.startLine}-${
+        r.endLine
+      })`;
+      const description = `${r.filepath}`;
 
-        if (r.filepath.includes("package.json")) {
-          console.log();
-        }
+      if (r.filepath.includes("package.json")) {
+        console.log();
+      }
 
-        return {
-          name,
-          description,
-          content: `\`\`\`${name}\n${r.content}\n\`\`\``,
-          uri: {
-            type: "file" as const,
-            value: r.filepath,
-          },
-        };
-      }),
-  ];
+      return {
+        name,
+        description,
+        content: `\`\`\`${name}\n${r.content}\n\`\`\``,
+        uri: {
+          type: "file" as const,
+          value: r.filepath,
+        },
+      };
+    });
 }

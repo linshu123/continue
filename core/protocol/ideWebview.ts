@@ -67,6 +67,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
    */
   viewHistory: [undefined, void];
   semanticSearch: [undefined, void];
+  quickReferencePage: [undefined, void];
   newSession: [undefined, void];
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];

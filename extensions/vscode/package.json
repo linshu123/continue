@@ -235,6 +235,13 @@
         "group": "Continue"
       },
       {
+        "command": "continue.quickReferencePage",
+        "category": "Continue",
+        "title": "Quick Reference",
+        "icon": "$(book)",
+        "group": "Continue"
+      },
+      {
         "command": "continue.writeCommentsForCode",
         "category": "Continue",
         "title": "Write Comments for this Code",
@@ -463,6 +470,11 @@
         {
           "command": "continue.semanticSearch",
           "group": "navigation@4",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.quickReferencePage",
+          "group": "navigation@5",
           "when": "view == continue.continueGUIView"
         }
       ],

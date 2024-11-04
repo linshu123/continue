@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
+import type { BranchAndDir, ContextItemId, ContextItemWithId, IDE, IndexingProgressUpdate, OneLineRange } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
 import {
@@ -29,6 +29,9 @@ import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
 import { ChatDescriber } from "./util/chatDescriber";
+import * as path from "path";
+import { LanceDbIndex } from "./indexing/LanceDbIndex";
+import { findLCSWordMatches } from "./util/similarityUtils";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -40,6 +43,9 @@ export class Core {
   controlPlaneClient: ControlPlaneClient;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
+  private lanceDbIndex: LanceDbIndex | undefined;
+  private mostRecentlyLookedContent: string = "";
+
 
   private readonly indexingPauseToken = new PauseToken(
     this.globalContext.get("indexingPaused") === true,
@@ -80,7 +86,6 @@ export class Core {
     private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     this.indexingState = { status: "loading", desc: "loading", progress: 0 };
-
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
@@ -361,6 +366,45 @@ export class Core {
         config: await this.configHandler.getSerializedConfig(),
         profileId: this.configHandler.currentProfile.profileId,
       };
+    });
+
+    on("context/getQuickReferences", async (msg) => {
+      if (!this.lanceDbIndex) {
+        const config = await this.config();
+        this.lanceDbIndex = new LanceDbIndex(config.embeddingsProvider, (path) => this.ide.readFile(path), path.sep);
+      }
+
+      const workspaceDirs = await this.ide.getWorkspaceDirs();
+      const branchAndDirs: BranchAndDir[] = workspaceDirs.map(dir => ({
+        branch: "main", // Or get actual branch
+        directory: dir
+      }));
+
+      const lanceDbChunks = await this.lanceDbIndex.retrieve(this.mostRecentlyLookedContent, 30, branchAndDirs, undefined);
+
+      const results: Array<ContextItemWithId> = [];
+
+      // Find longest common subsequence matches
+      for (const chunk of lanceDbChunks) {
+        const matches = findLCSWordMatches(this.mostRecentlyLookedContent, chunk.content);
+        const highlightRanges: OneLineRange[] = matches.map(match => {
+          return {start: match.start, end: match.end};
+        });
+        results.push({
+          id: {
+            providerTitle: `Similarity: ${chunk.distance?.toFixed(2)}`,
+            itemId: `${chunk.filepath.split(path.sep).pop()}:${chunk.startLine}-${chunk.endLine}`
+          },
+          name: chunk.filepath.split(path.sep).pop()!,
+          description: chunk.filepath,
+          content: chunk.content,
+          distance: chunk.distance,
+          highlightRanges: highlightRanges
+        });
+      }
+
+      const sortedResults = results.filter(result => result.highlightRanges?.length && result.highlightRanges.length >= 5).sort((a, b) => a.distance! - b.distance!);
+      return sortedResults;
     });
 
     async function* llmStreamChat(
@@ -670,9 +714,9 @@ export class Core {
     });
     on("index/forceReIndex", async ({ data }) => {
       const codebaseIndexer = await this.codebaseIndexerPromise;
-      if (data?.shouldClearIndexes) {
+      // if (data?.shouldClearIndexes) {
         await codebaseIndexer.clearIndexes();
-      }
+      // }
       codebaseIndexer.printDbPath();
 
 
@@ -705,6 +749,10 @@ export class Core {
 
     on("didChangeActiveTextEditor", ({ data: { filepath } }) => {
       recentlyEditedFilesCache.set(filepath, filepath);
+    });
+
+    on("didChangeContentOnScreen", ({ data: { content } }) => {
+      this.mostRecentlyLookedContent = content;
     });
   }
 

@@ -486,6 +486,9 @@ const commandsMap: (
     "continue.semanticSearch": () => {
       sidebar.webviewProtocol?.request("semanticSearch", undefined);
     },
+    "continue.quickReferencePage": () => {
+      sidebar.webviewProtocol?.request("quickReferencePage", undefined);
+    },
     "continue.toggleFullScreen": () => {
       focusGUI();
 
