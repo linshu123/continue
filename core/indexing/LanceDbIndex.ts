@@ -22,6 +22,8 @@ import {
   RefreshIndexResults,
 } from "./types.js";
 
+import fs from "fs";
+
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
   uuid: string;
@@ -124,6 +126,7 @@ export class LanceDbIndex implements CodebaseIndex {
         const content = await this.readFile(item.path);
 
         if (!shouldChunk(this.pathSep, item.path, content)) {
+          fs.appendFileSync("/Users/linshu/Desktop/should_not_chunk_lancedbindex.txt", item.path + "\n");
           continue;
         }
 
@@ -305,9 +308,15 @@ export class LanceDbIndex implements CodebaseIndex {
     };
 
     const dbRows = await this.computeRows(results.compute);
-    await this.insertRows(sqliteDb, dbRows);
+
+    // Split rows into batches of 100
+    const batchSize = 1;
+    for (let i = 0; i < dbRows.length; i += batchSize) {
+      const batch = dbRows.slice(i, i + batchSize);
+      await this.insertRows(sqliteDb, batch);
+    }
+
     await addComputedLanceDbRows(results.compute, dbRows);
-    let accumulatedProgress = 0;
 
     // Add tag - retrieve the computed info from lance sqlite cache
     for (const { path, cacheKey } of results.addTag) {
@@ -419,14 +428,18 @@ export class LanceDbIndex implements CodebaseIndex {
 
     const table = await db.openTable(tableName);
     let query = table.search(vector);
-    if (directory) {
-      // seems like lancedb is only post-filtering, so have to return a bunch of results and slice after
-      query = query.where(`path LIKE '${directory}%'`).limit(300);
-    } else {
+    // if (directory) {
+    //   // seems like lancedb is only post-filtering, so have to return a bunch of results and slice after
+      query = query.where(`path LIKE '${tag.directory}%'`).limit(2000);
+    // } else {
       // query = query.limit(n).metricType(lance.MetricType.Cosine);
-      query = query.limit(n);
-    }
+      // query = query.limit(n);
+    // }
     const results = await query.execute();
+    
+    const uniqueRows = new Set(results.map((r: any) => r.path));
+    const rowsStr = Array.from(uniqueRows).join("\n");
+    fs.writeFileSync("/Users/linshu/Desktop/all_lancebd_rows.txt", rowsStr + "\n");
     return results.slice(0, n) as any;
   }
 

@@ -12,8 +12,8 @@
       "cwd": "${workspaceFolder}/extensions/vscode",
       "args": [
         // Pass a directory to manually test in
-        // "${workspaceFolder}/../test_repos/continue",
-        "${workspaceFolder}/../test_repos/continue_test_2",
+        "${workspaceFolder}/../test_repos/continue",
+        // "${workspaceFolder}/../test_repos/continue_test_2",
         // "${workspaceFolder}/../webapps/TravelPlayground",
         // "${workspaceFolder}/manual-testing-sandbox",
         // "${workspaceFolder}/manual-testing-sandbox/test.js",

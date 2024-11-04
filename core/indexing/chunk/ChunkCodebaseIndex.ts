@@ -1,5 +1,6 @@
 import * as path from "path";
 import { RunResult } from "sqlite3";
+import fs from "fs";
 import { IContinueServerClient } from "../../continueServer/interface.js";
 import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
 import { getBasename } from "../../util/index.js";
@@ -165,6 +166,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   private async packToChunks(pack: PathAndCacheKey): Promise<Chunk[]> {
     const contents = await this.readFile(pack.path);
     if (!shouldChunk(this.pathSep, pack.path, contents)) {
+      fs.appendFileSync("/Users/linshu/Desktop/should_not_chunk_chunkcodebaseindex.txt", pack.path + "\n");
       return [];
     }
     const chunks: Chunk[] = [];

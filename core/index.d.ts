@@ -294,7 +294,7 @@ export interface ContextItem {
   editable?: boolean;
   icon?: string;
   uri?: ContextItemUri;
-  similarity?: number;
+  score?: number;
   distance?: number;
   highlightRanges?: OneLineRange[];
 }

@@ -376,11 +376,11 @@ export class Core {
 
       const workspaceDirs = await this.ide.getWorkspaceDirs();
       const branchAndDirs: BranchAndDir[] = workspaceDirs.map(dir => ({
-        branch: "main", // Or get actual branch
+        branch: "experiments", // Or get actual branch
         directory: dir
       }));
 
-      const lanceDbChunks = await this.lanceDbIndex.retrieve(this.mostRecentlyLookedContent, 30, branchAndDirs, undefined);
+      const lanceDbChunks = await this.lanceDbIndex.retrieve(this.mostRecentlyLookedContent, 100, branchAndDirs, undefined);
 
       const results: Array<ContextItemWithId> = [];
 
@@ -390,20 +390,28 @@ export class Core {
         const highlightRanges: OneLineRange[] = matches.map(match => {
           return {start: match.start, end: match.end};
         });
+
+        const totalHighlightedLength = highlightRanges.reduce((sum, range) => sum + (range.end - range.start), 0);
+        const totalHighlightedLengthPercent = totalHighlightedLength / chunk.content.length;  
+
         results.push({
           id: {
-            providerTitle: `Similarity: ${chunk.distance?.toFixed(2)}`,
+            providerTitle: `D: ${chunk.distance?.toFixed(2)}, H%: ${totalHighlightedLengthPercent?.toFixed(2)}, H: ${totalHighlightedLength}`,
             itemId: `${chunk.filepath.split(path.sep).pop()}:${chunk.startLine}-${chunk.endLine}`
           },
           name: chunk.filepath.split(path.sep).pop()!,
           description: chunk.filepath,
           content: chunk.content,
           distance: chunk.distance,
-          highlightRanges: highlightRanges
+          highlightRanges: highlightRanges,
+          score: totalHighlightedLengthPercent
         });
       }
 
-      const sortedResults = results.filter(result => result.highlightRanges?.length && result.highlightRanges.length >= 5).sort((a, b) => a.distance! - b.distance!);
+      const filteredResults = results.filter(result => result.highlightRanges?.length && result.highlightRanges.length > 0);
+      const sortedResults = filteredResults.sort((a, b) => {
+        return b.score! - a.score!;
+      });
       return sortedResults;
     });
 
