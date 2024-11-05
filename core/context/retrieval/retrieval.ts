@@ -116,6 +116,7 @@ export async function retrieveContextItemsFromEmbeddings(
           type: "file" as const,
           value: r.filepath,
         },
+        distance: r.distance,
       };
     });
 }

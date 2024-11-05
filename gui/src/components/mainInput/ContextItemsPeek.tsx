@@ -111,6 +111,11 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
               ? getBasename(contextItem.description)
               : contextItem.description}
           </div>
+          {contextItem.distance && (
+            <div className="text-xs text-gray-400">
+              {contextItem.distance?.toFixed(2)}
+            </div>
+          )}
         </div>
       </div>
     </div>

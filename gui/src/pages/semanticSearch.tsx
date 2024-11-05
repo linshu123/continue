@@ -96,6 +96,7 @@ function SemanticSearch() {
       if (result.status === "success") {
         const resolvedItems = result.content;
         resolvedItems.pop();
+        resolvedItems.sort((a, b) => a.distance! - b.distance!);
         setContextItems(resolvedItems);
         return resolvedItems;
       }
@@ -220,7 +221,7 @@ function SemanticSearch() {
                         e.preventDefault();
                       }}
                     >
-                      {contextItem.name} {contextItem.id.providerTitle}
+                      {contextItem.name} {contextItem.distance?.toFixed(2)}
                     </a>
                   </code>
                   <StyledMarkdownPreview

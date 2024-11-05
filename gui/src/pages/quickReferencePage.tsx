@@ -34,20 +34,6 @@ function QuickReferencePage() {
     setIsLoading(false);
   }
 
-  // useWebviewListener(
-  //   "showTopReferences",
-  //   async (data: { contextItems: ContextItemWithId[] }) => {
-  //     window.postMessage({
-  //       type: 'debug',
-  //       value: data.contextItems
-  //     });
-  //     console.log("Received contextItems:", data.contextItems);
-  //     setContextItems(data.contextItems);
-  //     setIsLoading(false);
-  //   },
-  //   [setContextItems]
-  // );
-
   return (
     <div className="overflow-y-scroll" style={{ fontSize: getFontSize() }}>
        <pre style={{whiteSpace: 'pre-wrap'}}>

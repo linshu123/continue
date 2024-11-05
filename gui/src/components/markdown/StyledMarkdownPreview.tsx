@@ -1,7 +1,8 @@
-import { memo, useEffect, useMemo } from "react";
+import { memo, useEffect } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 import styled from "styled-components";
 import { visit } from "unist-util-visit";
 import {
@@ -16,7 +17,9 @@ import FilenameLink from "./FilenameLink";
 import "./markdown.css";
 import PreWithToolbar from "./PreWithToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
-import { ContextItem, ContextItemWithId, OneLineRange } from "core";
+import { useSelector } from "react-redux";
+import { memoizedContextItemsSelector } from "../../redux/slices/stateSlice";
+import { ctxItemToRifWithContents } from "core/commands/util";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -75,10 +78,10 @@ const StyledMarkdown = styled.div<{
 `;
 
 interface StyledMarkdownPreviewProps {
+  source?: string;
   className?: string;
   showCodeBorder?: boolean;
   scrollLocked?: boolean;
-  contextItem?: ContextItemWithId;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -113,7 +116,29 @@ function getCodeChildrenContent(children: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
+  const contextItems = useSelector(memoizedContextItemsSelector);
+
   const [reactContent, setMarkdownSource] = useRemark({
+    remarkPlugins: [
+      remarkMath,
+      () => {
+        return (tree) => {
+          visit(tree, "code", (node: any) => {
+            if (!node.lang) {
+              node.lang === "javascript";
+            } else if (node.lang.includes(".")) {
+              node.lang = node.lang.split(".").slice(-1)[0];
+            }
+
+            if (node.meta) {
+              node.data = node.data || {};
+              node.data.hProperties = node.data.hProperties || {};
+              node.data.hProperties.filepath = node.meta;
+            }
+          });
+        };
+      },
+    ],
     rehypePlugins: [
       rehypeKatex as any,
       {},
@@ -129,11 +154,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         let codeBlockIndex = 0;
         return (tree) => {
           visit(tree, { tagName: "pre" }, (node: any) => {
-            // Pass highlightRanges to the pre component
-            node.properties = { 
-              codeBlockIndex,
-              highlightRanges: props.contextItem.highlightRanges
-            };
+            // Add an index (0, 1, 2, etc...) to each code block.
+            node.properties = { codeBlockIndex };
             codeBlockIndex++;
           });
         };
@@ -151,33 +173,31 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         },
         pre: ({ node, ...preProps }) => {
           const { className, filepath } = preProps?.children?.[0]?.props;
+
           return props.showCodeBorder ? (
             <PreWithToolbar
               codeBlockIndex={preProps.codeBlockIndex}
               language={getLanuageFromClassName(className)}
               filepath={filepath}
             >
-              <SyntaxHighlightedPre 
-                key={JSON.stringify(props.contextItem.uri) + JSON.stringify(props.contextItem.highlightRanges)}
-                {...preProps}
-                highlightRanges={props.contextItem.highlightRanges}
-              >
-                {preProps.children}
-              </SyntaxHighlightedPre>
+              <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
             </PreWithToolbar>
           ) : (
-            <SyntaxHighlightedPre 
-              key={JSON.stringify(props.contextItem.uri) + JSON.stringify(props.contextItem.highlightRanges)}
-              {...preProps} 
-              highlightRanges={props.contextItem.highlightRanges}
-            >
-              {preProps.children}
-            </SyntaxHighlightedPre>
+            <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
           );
         },
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
-          
+
+          const ctxItem = contextItems.find((ctxItem) =>
+            ctxItem.uri?.value.includes(content),
+          );
+
+          if (ctxItem) {
+            const rif = ctxItemToRifWithContents(ctxItem);
+            return <FilenameLink rif={rif} />;
+          }
+
           return <code {...codeProps}>{codeProps.children}</code>;
         },
       },
@@ -185,8 +205,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   });
 
   useEffect(() => {
-    setMarkdownSource(props.contextItem?.content + JSON.stringify(props.contextItem?.highlightRanges));
-  }, [props.contextItem]);
+    setMarkdownSource(props.source || "");
+  }, [props.source]);
 
   return (
     <StyledMarkdown fontSize={getFontSize()}>{reactContent}</StyledMarkdown>
