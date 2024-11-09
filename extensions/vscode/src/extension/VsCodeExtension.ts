@@ -31,6 +31,9 @@ import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeIde } from "../VsCodeIde";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
+import { LineGroupExplainer } from "../LineGroupExplainer";
+import Ollama from "core/llm/llms/Ollama";
+import OpenAI from "core/llm/llms/OpenAI";
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
 
@@ -46,7 +49,7 @@ export class VsCodeExtension {
   private core: Core;
   private battery: Battery;
   private workOsAuthProvider: WorkOsAuthProvider;
-
+  private lineGroupExplainer: LineGroupExplainer;
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
     this.workOsAuthProvider = new WorkOsAuthProvider(context);
@@ -378,6 +381,28 @@ export class VsCodeExtension {
           editor.document.getText(range)
         ).join('\n');
         this.core.invoke("didChangeContentOnScreen", { content: visibleContent });
+      }
+    });
+    const configPath = getConfigJsonPath();
+    const continueConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    const openaiKey = continueConfig.openaiApiKey;
+    const llm = new OpenAI({
+        model: "gpt-4o-mini",
+        apiKey: openaiKey,
+        completionOptions: {
+            temperature: 0.1,  // Lower temperature for more focused responses
+            maxTokens: 30,     // Limit tokens since you want short responses
+            model: "gpt-4o-mini"
+        }
+    });
+    // const llm = new Ollama({
+    //     model: "llama3.2",
+    // });
+    this.lineGroupExplainer = new LineGroupExplainer(context, llm);
+
+    vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+      if (editor) {
+        await this.lineGroupExplainer.generateLineGroupsForDocument(editor.document);
       }
     });
   }
